@@ -11,20 +11,30 @@ var app = express();
 
 app.use(bodyParser.json()); // middleware function, to convert data to json format
 
-app.post('/todos', (req, res) => {
+app.post('/todos', (req, res) => { 
   // console.log("todos data: ", req.body);
   var todo = new Todo({
     name: req.body.name,
     age: req.body.age
   });
 
-  todo.save().then((doc) => {
+  todo.save().then((doc) => { // .save() store data into db
     res.send(doc);
     // console.log("saved data: ", doc);
   }, (err) => {
     res.status(400).send(err);
     // console.log("Error: ", err);
   })
+});
+
+app.get('/todos', (req, res) => {
+  Todo.find().then((todos) => { // .find() read the data
+    console.log("todos: ", todos);
+    res.send({todos});
+  }, (err) => {
+    console.log("Error: ", err);
+    res.status(404).send(err);
+  });
 });
 
 // GET /todos data
