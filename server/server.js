@@ -10,6 +10,8 @@ var { User } = require('./models/user');
 
 var app = express();
 
+const port = process.env.PORT || 3785;
+
 app.use(bodyParser.json()); // middleware function, to convert data to json format
 
 // POST /todos data
@@ -62,8 +64,8 @@ app.get('/todos/:id', (req, res) => {
   }
 });
 
-app.listen(3785, () => {
-  console.log("Server is up ..");
+app.listen(port, () => {
+  console.log(`Server is up with port ${port} ..`);
 });
 
 module.exports = { app }
