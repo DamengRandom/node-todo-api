@@ -24,7 +24,7 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, client) => {
     console.log("No data has been returned ..");
   });
 
-  db.collection('Todo').find({
+  db.collection('Todo').find({ // read todo data
     name: 'xiaochou' // you mus tuse this wrapper to convet the hash to a string and become readable by nodejs function code
   }).toArray().then((docs) => {
     // let specificOne = docs.filter((doc) => {

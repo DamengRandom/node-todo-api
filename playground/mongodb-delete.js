@@ -23,7 +23,7 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, client) => {
   
   // findOneDelete: 
   // lastErrorObject: { n: 1 }: 
-  db.collection('Todo').findOneAndDelete({ 
+  db.collection('Todo').findOneAndDelete({  // find id and delete that id corresponded data
     _id: new ObjectID('5ab0fc9de86f460753d92360')
   }).then((result) => {
     console.log("Delete named 'Dameng' data completely ..", result);
