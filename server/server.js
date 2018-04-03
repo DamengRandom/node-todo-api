@@ -1,7 +1,9 @@
+require('./config/config');
 // import modules
-var express = require('express');
-var bodyParser = require('body-parser'); // body-parser allows us to send json format data to the server 
+const express = require('express');
+const bodyParser = require('body-parser'); // body-parser allows us to send json format data to the server 
 const { ObjectID } = require('mongodb');
+const _ = require('lodash');
 
 var { mongoose } = require('./db/mongoose');
 // create a model (mongoose model): this is how to save the data into db -> how the json data looks like !!!
@@ -10,11 +12,11 @@ var { User } = require('./models/user');
 
 var app = express();
 
-const port = process.env.PORT || 3785;
+const port = process.env.PORT;
 
 app.use(bodyParser.json()); // middleware function, to convert data to json format
 
-// POST /todos data
+// POST /todos data (Create New Data)
 app.post('/todos', (req, res) => { 
   // console.log("todos data: ", req.body);
   var todo = new Todo({
@@ -31,7 +33,7 @@ app.post('/todos', (req, res) => {
   })
 });
 
-// GET /todos data
+// GET /todos data (Read List data)
 app.get('/todos', (req, res) => {
   Todo.find().then((todos) => { // .find() read the data
     console.log("todos: ", todos);
@@ -42,7 +44,7 @@ app.get('/todos', (req, res) => {
   });
 });
 
-// GET /todos/:id data
+// GET /todos/:id data (Read Detail Data)
 app.get('/todos/:id', (req, res) => {
   let id = req.params.id;
   if(!ObjectID.isValid(id)){
@@ -55,6 +57,51 @@ app.get('/todos/:id', (req, res) => {
         res.status(404).send(err);
       }else {
         console.log('todo: ', todo);
+        res.send(todo);
+      }
+    }).catch((err) => {
+      console.log("Error: ", err);
+      res.status(404).send(err);
+    });
+  }
+});
+
+// UPDATE/PUT/PATCH /todos/:id (Update specific Data)
+app.patch('/todos/:id', (req, res) => {
+  let id = req.params.id;
+  let body = _.pick(req.body, ['name', 'age']);
+  if(!ObjectID.isValid(id)){
+    console.log("ID is invalid ..");
+    return res.status(404).send();
+  }else {
+    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+      if(!todo){
+        console.log('Data not found ..');
+        res.status(404).send(err);
+      }else {
+        console.log('updated todo dataa: ', todo);
+        res.send({todo}); // remember: must be saved as object data format
+      }
+    }).catch((err) => {
+      console.log("Error: ", err);
+      res.status(404).send(err);
+    });
+  }
+});
+
+// DELETE /todos/:id (Delete sepcific todo data)
+app.delete('/todos/:id', (req, res) => {
+  let id = req.params.id;
+  if(!ObjectID.isValid(id)){
+    console.log("ID is invalid ..");
+    return res.status(404).send();
+  }else {
+    Todo.findByIdAndRemove(id).then((todo) => {
+      if(!todo){
+        console.log('Data not found ..');
+        res.status(404).send(err);
+      }else {
+        console.log('removed todo: ', todo);
         res.send(todo);
       }
     }).catch((err) => {
