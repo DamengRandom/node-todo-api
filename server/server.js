@@ -111,6 +111,23 @@ app.delete('/todos/:id', (req, res) => {
   }
 });
 
+
+
+// POST a new user
+app.post('/users', (req, res) => {
+  // let user = new User({
+  //   email: req.body.email,
+  //   password: req.body.password
+  // });
+  let body = _.pick(req.body, ['email', 'password']);
+  let user = new User(body);
+  user.save().then(() => {
+    return user.generateAuthToken();
+  }).then((token) => {
+    res.header('x-auth', token).send(user);
+  }).catch((err) => console.log("Error", err));
+})
+
 app.listen(port, () => {
   console.log(`Server is up with port ${port} ..`);
 });
