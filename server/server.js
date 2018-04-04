@@ -10,11 +10,17 @@ var { mongoose } = require('./db/mongoose');
 var { Todo } = require('./models/todos');
 var { User } = require('./models/user');
 
+// imported middleware file
+var { authenticate } = require('./middleware/authenticate');
+
 var app = express();
 
 const port = process.env.PORT;
 
+// middleware
 app.use(bodyParser.json()); // middleware function, to convert data to json format
+
+
 
 // POST /todos data (Create New Data)
 app.post('/todos', (req, res) => { 
@@ -126,7 +132,14 @@ app.post('/users', (req, res) => {
   }).then((token) => {
     res.header('x-auth', token).send(user);
   }).catch((err) => console.log("Error", err));
-})
+});
+
+
+
+// get user [email, id]
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user); // get the req.user data from `authenticate` middleware
+});
 
 app.listen(port, () => {
   console.log(`Server is up with port ${port} ..`);
