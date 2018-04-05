@@ -1,5 +1,6 @@
 const { SHA256 } = require('crypto-js');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 var data = {
   id: 1
@@ -36,3 +37,25 @@ console.log('Decoded: ', decoded);
 // }else {
 //   console.log("Data was changed, not secure ..");
 // }
+
+
+
+// bcrypt js demo: bcrypt is used for hashing password: prevent password displayed as plaintext
+
+var password = 'dameng';
+
+bcrypt.genSalt(10, (err, salt) => {
+  bcrypt.hash(password, salt, (err, hash) => {
+    console.log("Hash value: ", hash);
+  });
+});
+
+var hashedPassword = `$2a$10$0R9mIwqwqelPW1DwG5jMEe.sslEMsbItL5Ey3RVpnMeKMdsqPxAee`;
+
+bcrypt.compare(password, hashedPassword, (err, result) => { // to compare and get the final result 
+  if(result){
+    console.log("compared result is: ", result);
+  }else {
+    console.log("Wrong, value mismatched !!");
+  }
+});
