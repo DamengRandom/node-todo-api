@@ -4,27 +4,16 @@ const { ObjectID } = require('mongodb');
 const _ = require('lodash');
 
 const { app } = require('./../server');
-const { Todo } = require('./../models/todos');
+const { Todo } = require('./../models/todo');
+const { User } = require('./../models/user');
 
-const todos = [{
-  _id: new ObjectID(),
-  name: "Dameng"
-}, {
-  _id: new ObjectID(),
-  name: "Xiaochouchou"
-}];
+// import seed mock data
+const { todos, populateTodos, users, populateUsers } = require('./seed/seed');
 
-// beforeEach((done) => {
-//   Todo.remove({}).then(() => done()); // to ensure db is empty before run the test code !!!
-// }); // before run test code, we do something inside this function
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
-beforeEach((done) => {
-  Todo.remove({}).then(() => {
-    return Todo.insertMany(todos);
-  }).then(() => done()); 
-});
-
-describe('POST /todos', () => {
+describe('POST /todo', () => {
   it('should create a new todo', (done) => {
     var name = 'Test name';
     request(app)

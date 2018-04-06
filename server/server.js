@@ -7,7 +7,7 @@ const _ = require('lodash');
 
 var { mongoose } = require('./db/mongoose');
 // create a model (mongoose model): this is how to save the data into db -> how the json data looks like !!!
-var { Todo } = require('./models/todos');
+var { Todo } = require('./models/todo');
 var { User } = require('./models/user');
 
 // imported middleware file
