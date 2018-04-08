@@ -2,6 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 const { ObjectID } = require('mongodb');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 const { app } = require('./../server');
 const { Todo } = require('./../models/todo');
@@ -34,7 +35,7 @@ describe('POST /todo', () => {
             done();
           }).catch((err) => {
             return done(err);
-          })
+          });
         }
       });
   });
@@ -69,10 +70,10 @@ describe('GET /todos', () => {
             done();
           }).catch((err) => {
             return done(err);
-          })
+          });
         }
-      })
-  })
+      });
+  });
 });
 
 describe('GET /todos/:id', () => {
@@ -158,3 +159,109 @@ describe('PATCH /todos/:id', () => {
       .end(done)
   });
 });
+
+
+// test user apis
+describe('GET /users/me', () => {
+  it('should get user email and password information after api call successfully', (done) => {
+    request(app)
+      .get('/users/me')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
+      })
+      .end(done);
+  });
+  it('should return 401 if authentication is failed', (done) => {
+    request(app)
+      .get('/users/me')
+      .expect(401)
+      .expect((res) => {
+        expect(res.body).toEqual({}); 
+        // equal is to equal the same data type, such as object equals to object, 
+        // toBe is usually a specific value, such as string or number
+      })
+      .end(done); 
+  })
+});
+
+describe('POST /users', () => {
+  it('should return a unique email and password user values', (done) => {
+    let email = "damon1@test.com",
+        password = "123123123";
+    // let hashVal = bcrypt.genSalt(10, (err, salt) => {
+    //   bcrypt.hash(password, salt, (err, hash) => {
+    //     // console.log("Hash value: ", hash);
+    //     return hash;
+    //   });
+    // });
+    request(app)
+      .post('/users')
+      .send({email, password})
+      .expect(200)
+      .expect((res) => {
+        // expect(res.body.password).toBe(hashVal);
+        expect(res.headers['x-auth']).toBeTruthy(); // it means toExist()
+        expect(res.body._id).toBeTruthy(); // it means toExist()
+        expect(res.body.email).toBe(email);
+      })
+      .end((err) => {
+        if(err){
+          return done(err);
+        }
+        User.findOne({email}).then((user) => {
+          expect(user).toBeTruthy(); // it means toExist()
+          expect(user.password).not.toBe(password);
+          done();
+        }).catch((err) => {
+          return done(err);
+        });
+      });
+  });
+  it('should return 401 when account already existed', (done) => {
+    let email = "damon1@test.com",
+        password = "123123123";
+    request(app)
+      .post('/users')
+      .send({email: users[0].email, password: password})
+      .expect(400)
+      .end(done);
+  });
+});
+
+describe('POST /users/login', () => {
+  it('should login successfully', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: users[0].email, 
+        password: users[0].password
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toBeTruthy();
+        expect(res.body.email).toBeTruthy();
+      })
+      .end((err, res) => {
+        if(err){
+          return done(err);
+        }
+        User.findById(users[0]._id).then((user) => {
+          expect(user.tokens[0].access).toEqual('auth');
+          expect(user.tokens[1].token).toEqual(res.headers['x-auth']);
+          done();
+        }).catch((e) => console.log("Error: ", done(e)));
+      });
+  });
+  it('should login failed ..', (done) => {
+    request(app)
+      .post('/users/login')
+      .expect(400)
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
+  });
+})

@@ -4,6 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser'); // body-parser allows us to send json format data to the server 
 const { ObjectID } = require('mongodb');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 var { mongoose } = require('./db/mongoose');
 // create a model (mongoose model): this is how to save the data into db -> how the json data looks like !!!
@@ -129,16 +130,41 @@ app.post('/users', (req, res) => {
   let user = new User(body);
   user.save().then(() => {
     return user.generateAuthToken();
+  }, (err) => {
+    return res.status(400).send(err);
   }).then((token) => {
     res.header('x-auth', token).send(user);
-  }).catch((err) => console.log("Error", err));
+  }).catch((err) => res.status(400).send(err));
 });
-
-
 
 // get user [email, id]
 app.get('/users/me', authenticate, (req, res) => {
   res.send(req.user); // get the req.user data from `authenticate` middleware
+});
+
+// POST user login
+app.post('/users/login', (req, res) => {
+  let body = _.pick(req.body, ['email', 'password']);
+  // res.send(body); // send means API returns
+  // wrong idea ...
+  // var hashPass = ''; 
+  // bcrypt.genSalt(10, (err, salt) => {
+  //   bcrypt.hash(body.password, err, salt, (err, hash) => {
+  //     hashPass = hash;
+  //     // return hash;
+  //   });
+  // });
+  // console.log('hash: ', hashPass);  
+  User.findByCredentials(body.email, body.password).then((user) => {
+    // res.send(user);
+    user.generateAuthToken().then((token) => {
+      res.header('x-auth', token).send(user);
+    })
+  }).catch((err) => {
+    console.log("Error: ", err);
+    res.status(400).send(err);
+  });
+
 });
 
 app.listen(port, () => {
