@@ -24,11 +24,12 @@ app.use(bodyParser.json()); // middleware function, to convert data to json form
 
 
 // POST /todos data (Create New Data)
-app.post('/todos', (req, res) => { 
+app.post('/todos', authenticate, (req, res) => { 
   // console.log("todos data: ", req.body);
   var todo = new Todo({
     name: req.body.name,
-    age: req.body.age
+    age: req.body.age,
+    _creator: req.user._id
   });
 
   todo.save().then((doc) => { // .save() store data into db
@@ -41,8 +42,8 @@ app.post('/todos', (req, res) => {
 });
 
 // GET /todos data (Read List data)
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos) => { // .find() read the data
+app.get('/todos', authenticate, (req, res) => {
+  Todo.find({_creator: req.user._id}).then((todos) => { // .find() read the data
     console.log("todos: ", todos);
     res.send({todos});
   }, (err) => {
@@ -52,13 +53,17 @@ app.get('/todos', (req, res) => {
 });
 
 // GET /todos/:id data (Read Detail Data)
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   let id = req.params.id;
+
   if(!ObjectID.isValid(id)){
     console.log("ID is invalid ..");
     return res.status(404).send();
   }else {
-    Todo.findById(id).then((todo) => {
+    Todo.findOne({
+      _id: id,
+      _creator: req.user._id
+    }).then((todo) => {
       if(!todo){
         console.log('Data not found ..');
         res.status(404).send(err);
@@ -74,14 +79,22 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // UPDATE/PUT/PATCH /todos/:id (Update specific Data)
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   let id = req.params.id;
   let body = _.pick(req.body, ['name', 'age']);
   if(!ObjectID.isValid(id)){
-    console.log("ID is invalid ..");
+    // console.log("ID is invalid ..");
     return res.status(404).send();
   }else {
-    Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    Todo.findOneAndUpdate({
+      _id: id,
+      _creator: req.user._id
+    }, {
+      $set: body
+    }, {
+      new: true
+    }).then((todo) => {
+    // Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
       if(!todo){
         console.log('Data not found ..');
         res.status(404).send(err);
@@ -97,13 +110,18 @@ app.patch('/todos/:id', (req, res) => {
 });
 
 // DELETE /todos/:id (Delete sepcific todo data)
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
   let id = req.params.id;
+
   if(!ObjectID.isValid(id)){
     console.log("ID is invalid ..");
     return res.status(404).send();
   }else {
-    Todo.findByIdAndRemove(id).then((todo) => {
+    Todo.findOneAndRemove({
+      _id: id,
+      _creator: req.user._id
+    }).then((todo) => {
+    // Todo.findByIdAndRemove(id).then((todo) => {
       if(!todo){
         console.log('Data not found ..');
         res.status(404).send(err);
