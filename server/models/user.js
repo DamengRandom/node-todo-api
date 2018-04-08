@@ -58,6 +58,16 @@ UserSchema.methods.generateAuthToken = function(){
   });
 }
 
+UserSchema.methods.removeToken = function(token){
+  var user = this;
+  // $pull // allow developer to remove a data record from array with satifying of certain conditions
+  return user.update({
+    $pull: {
+      tokens: { token }
+    }
+  })
+}
+
 UserSchema.statics.findByToken = function(token){ // statics turn model method to an instance method
   let User = this;
   let decoded;
@@ -76,21 +86,6 @@ UserSchema.statics.findByToken = function(token){ // statics turn model method t
     'tokens.access': 'auth'
   });
 }
-
-UserSchema.pre('save', function(next){ // to run some functions before save events triggered !!! // pre means before do thing A, do the thing B first !!!
-  let user = this;
-
-  if(user.isModified('password')){
-    bcrypt.genSalt(10, (err, salt) => {
-      bcrypt.hash(user.password, salt, (err, hash) => {
-        user.password = hash;
-        next();
-      });
-    });
-  }else {
-    next();
-  }
-}); 
 
 UserSchema.statics.findByCredentials = function(email, password){
   let User = this;
@@ -117,6 +112,21 @@ UserSchema.statics.findByCredentials = function(email, password){
     });
   })
 };
+
+UserSchema.pre('save', function(next){ // to run some functions before save events triggered !!! // pre means before do thing A, do the thing B first !!!
+  let user = this;
+
+  if(user.isModified('password')){
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        user.password = hash;
+        next();
+      });
+    });
+  }else {
+    next();
+  }
+}); 
 
 var User = mongoose.model('User', UserSchema);
 

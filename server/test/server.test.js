@@ -264,4 +264,33 @@ describe('POST /users/login', () => {
       })
       .end(done);
   });
+});
+
+describe('DELETE /users/me/token', () => {
+  it('should delete token when logout', (done) => {
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', users[0].tokens[0].token)
+      .expect(200)
+      // .expect((res) => {
+      //   expect(res.body.tokens).toEqual(undefined)
+      // })
+      // .end(done);
+      .end((err, res) => {
+        if(!res){
+          return done(err);
+        }
+        User.findById(users[0]._id).then((user) => {
+          // console.log(user.tokens);
+          expect(user.tokens.length).toBe(0);
+          done();
+        });
+      });
+  });
+  it('should return 400 when no x-auth value in the header', (done) => {
+    request(app)
+      .delete('/users/me/token')
+      .expect(401)
+      .end(done);
+  });
 })
