@@ -136,6 +136,28 @@ app.delete('/todos/:id', authenticate, (req, res) => {
   }
 });
 
+// async await version of delete todo api handler
+// app.delete('/todos/:id', authenticate, async (req, res) => {
+//     let id = req.params.id;
+//     if(!ObjectID.isValid(id)){
+//       console.log("ID is invalid ..");
+//       return res.status(404).send();
+//     }
+//     try {
+//       const todo = await Todo.findOneAndRemove({
+//         _id: id,
+//         _creator: req.user._id
+//       });
+//       if(!todo){
+//         return res.status(404).send(err);
+//       }
+//       res.send(todo);
+//     }catch(e) {
+//       res.status(404).send(err);
+//     }
+// });
+
+
 
 
 // POST a new user
@@ -154,6 +176,19 @@ app.post('/users', (req, res) => {
     res.header('x-auth', token).send(user);
   }).catch((err) => res.status(400).send(err));
 });
+
+// async await version of post add new user api handler
+// app.post('/users', (req, res) => {
+//   try{
+//     let body = _.pick(req.body, ['email', 'password']);
+//     let user = new User(body);
+//     await user.save();
+//     const token = user.generateAuthToken();
+//     res.header('x-auth', token).send(user);
+//   }catch(e){
+//     return res.status(400).send(e);
+//   }
+// });
 
 // get user [email, id]
 app.get('/users/me', authenticate, (req, res) => {
@@ -182,8 +217,19 @@ app.post('/users/login', (req, res) => {
     console.log("Error: ", err);
     res.status(400).send(err);
   });
-
 });
+
+// async await version of post user login api handler
+// app.post('/users/login', async (req, res) => {
+//   try{
+//     let body = _.pick(req.body, ['email', 'password']); 
+//     const user = await User.findByCredentials(body.email, body.password);
+//     const token = await user.generateAuthToken();
+//     res.header('x-auth', token).send(user);  
+//   }catch(e){
+//     res.status(400).send(e);
+//   }
+// });
 
 app.delete(`/users/me/token`, authenticate, (req, res) => {
   req.user.removeToken(req.token).then(() => {
@@ -192,6 +238,16 @@ app.delete(`/users/me/token`, authenticate, (req, res) => {
     res.status(401).send();
   });
 });
+
+// async await version of delete user api handler
+// app.delete(`/users/me/token`, authenticate, async (req, res) => {
+//   try{
+//     await req.user.removeToken(req.token);
+//     res.status(200).send();
+//   }catch(e) {
+//     res.status(401).send(e);
+//   }
+// });
 
 
 // final listen port and run the app
